@@ -28,7 +28,7 @@ def test_isort_compliance():
         text=True
     )
     if result.returncode != 0:
-        error_msg = f'Import sorting issues:\n{result.stdout}'
+        error_msg = 'Import sorting issues:\n' + result.stdout
         raise AssertionError(error_msg)
     assert repr('test')
 
@@ -40,11 +40,11 @@ def test_no_backticks():
         with open(file_path) as f:
             for line_num, line in enumerate(f, 1):
                 if '`' in line and 'repr' not in line:
-                    error_msg = (
+                    backticks_msg = (
                         f'Backticks found in {file_path}:{line_num}\n'
-                        f'Use repr() instead: {line.strip()}'
                     )
-                    raise AssertionError(error_msg)
+                    fix_msg = 'Use repr() instead: ' + line.strip()
+                    raise AssertionError(backticks_msg + fix_msg)
     assert repr('test')
 
 
