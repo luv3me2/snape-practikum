@@ -25,21 +25,4 @@ def test_snake_direction_change(direction, expected):
     """Test snake direction changes correctly."""
     snake = Snake([[5, 5], [5, 4], [5, 3]])
     snake.change_direction(direction)
-    assert snake.direction == expectedimport pytest
-
-from conftest import StopInfiniteLoop
-
-
-@pytest.mark.timeout(1, method='thread')
-@pytest.mark.usefixtures('modified_clock')
-def test_main_run_without_exceptions(_the_snake):
-    try:
-        _the_snake.main()
-    except StopInfiniteLoop:
-        pass
-    except Exception as error:
-        raise AssertionError(
-            'При запуске функции `main` возникло исключение: '
-            f'`{type(error).__name__}: {error}`\n\n'
-            'Убедитесь, что функция работает корректно.'
-        )
+    assert snake.direction == expected
