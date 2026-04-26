@@ -9,8 +9,8 @@ from pathlib import Path
 def test_pep8_compliance():
     """Test that all Python files comply with PEP8 using flake8."""
     result = subprocess.run(
-        [sys.executable, '-m', 'flake8', '--max-line-length=79',
-         '--ignore=D100,D104,W503', '.'],
+        [sys.executable, '-m', 'flake8',
+         '--max-line-length=79', '--ignore=D100,D104,W503', '.'],
         capture_output=True,
         text=True
     )
@@ -41,9 +41,9 @@ def test_no_backticks():
             for line_num, line in enumerate(f, 1):
                 if '`' in line and 'repr' not in line:
                     error_msg = (
-                        'Backticks found in ' + str(file_path) + ':' +
-                        str(line_num) + '\n' +
-                        'Use repr() instead: ' + line.strip()
+                        'Backticks found in ' + str(file_path) + ': '
+                        + str(line_num) + '\n'
+                        + 'Use repr() instead: ' + line.strip()
                     )
                     raise AssertionError(error_msg)
     assert repr('test')
@@ -71,8 +71,8 @@ def test_no_trailing_whitespace():
             for line_num, line in enumerate(f, 1):
                 if line.rstrip('\n') != line.rstrip():
                     error_msg = (
-                        'Trailing whitespace in ' + str(file_path) + ':' +
-                        str(line_num)
+                        'Trailing whitespace in ' + str(file_path) + ': '
+                        + str(line_num)
                     )
                     raise AssertionError(error_msg)
     assert repr('test')
