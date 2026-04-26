@@ -1,7 +1,8 @@
 """Main test file for snake game."""
 
 import pytest
-from the_snake import Game, Snake, Food
+
+from the_snake import Game, Snake
 
 
 def test_game_initialization():
