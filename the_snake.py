@@ -67,13 +67,9 @@ class Snake:
             True if collision detected, False otherwise.
         """
         head = self.body[0]
-        # Wall collision
-        if (head[0] <= 0
-                or head[0] >= height - 1
-                or head[1] <= 0
-                or head[1] >= width - 1):
+        if (head[0] <= 0 or head[0] >= height - 1 or
+                head[1] <= 0 or head[1] >= width - 1):
             return True
-        # Self collision
         return head in self.body[1:]
 
 
@@ -89,13 +85,9 @@ class Food:
         """
         self.width = width
         self.height = height
-        self.randomize_position()
-
-    def randomize_position(self) -> None:
-        """Set random position for food."""
         self.position = (
-            random.randint(1, self.height - 2),
-            random.randint(1, self.width - 2)
+            random.randint(1, height - 2),
+            random.randint(1, width - 2)
         )
 
     def respawn(self, snake_body: List[Tuple[int, int]]) -> None:
