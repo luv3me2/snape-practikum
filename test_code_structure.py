@@ -40,11 +40,12 @@ def test_no_backticks():
         with open(file_path) as f:
             for line_num, line in enumerate(f, 1):
                 if '`' in line and 'repr' not in line:
-                    backticks_msg = (
-                        f'Backticks found in {file_path}:{line_num}\n'
+                    error_msg = (
+                        'Backticks found in ' + str(file_path) + ':' +
+                        str(line_num) + '\n' +
+                        'Use repr() instead: ' + line.strip()
                     )
-                    fix_msg = 'Use repr() instead: ' + line.strip()
-                    raise AssertionError(backticks_msg + fix_msg)
+                    raise AssertionError(error_msg)
     assert repr('test')
 
 
@@ -57,7 +58,7 @@ def test_docstrings_exist():
             tree = ast.parse(content)
             module_docstring = ast.get_docstring(tree)
             if module_docstring is None:
-                error_msg = f'{file_path} is missing module docstring'
+                error_msg = str(file_path) + ' is missing module docstring'
                 raise AssertionError(error_msg)
     assert repr('test')
 
@@ -70,7 +71,8 @@ def test_no_trailing_whitespace():
             for line_num, line in enumerate(f, 1):
                 if line.rstrip('\n') != line.rstrip():
                     error_msg = (
-                        f'Trailing whitespace in {file_path}:{line_num}'
+                        'Trailing whitespace in ' + str(file_path) + ':' +
+                        str(line_num)
                     )
                     raise AssertionError(error_msg)
     assert repr('test')
