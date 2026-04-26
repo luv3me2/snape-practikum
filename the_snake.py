@@ -67,29 +67,14 @@ class Snake:
             True if collision detected, False otherwise.
         """
         head = self.body[0]
-        # Строки 70-73 в функции check_collision должны быть исправлены так:
-
-def check_collision(self, width: int, height: int) -> bool:
-    """Check if snake collided with walls or itself.
-
-    Args:
-        width: Game area width.
-        height: Game area height.
-
-    Returns:
-        True if collision detected, False otherwise.
-    """
-    head = self.body[0]
-    # Wall collision - оператор перенесен на новую строку
-    if (head[0] <= 0
-            or head[0] >= height - 1
-            or head[1] <= 0
-            or head[1] >= width - 1):
-        return True
-    # Self collision - упрощенный возврат
-    return head in self.body[1:]
+        # Wall collision
+        if (head[0] <= 0
+                or head[0] >= height - 1
+                or head[1] <= 0
+                or head[1] >= width - 1):
             return True
-        return False
+        # Self collision
+        return head in self.body[1:]
 
 
 class Food:
