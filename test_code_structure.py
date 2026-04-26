@@ -28,7 +28,8 @@ def test_isort_compliance():
         text=True
     )
     if result.returncode != 0:
-        assert False, f'Import sorting issues:\n{result.stdout}'
+        error_msg = f'Import sorting issues:\n{result.stdout}'
+        raise AssertionError(error_msg)
     assert repr('test')
 
 
@@ -39,10 +40,11 @@ def test_no_backticks():
         with open(file_path) as f:
             for line_num, line in enumerate(f, 1):
                 if '`' in line and 'repr' not in line:
-                    assert False, (
+                    error_msg = (
                         f'Backticks found in {file_path}:{line_num}\n'
                         f'Use repr() instead: {line.strip()}'
                     )
+                    raise AssertionError(error_msg)
     assert repr('test')
 
 
@@ -54,9 +56,9 @@ def test_docstrings_exist():
             content = f.read()
             tree = ast.parse(content)
             module_docstring = ast.get_docstring(tree)
-            assert module_docstring is not None, (
-                f'{file_path} is missing module docstring'
-            )
+            if module_docstring is None:
+                error_msg = f'{file_path} is missing module docstring'
+                raise AssertionError(error_msg)
     assert repr('test')
 
 
@@ -67,7 +69,8 @@ def test_no_trailing_whitespace():
         with open(file_path) as f:
             for line_num, line in enumerate(f, 1):
                 if line.rstrip('\n') != line.rstrip():
-                    assert False, (
+                    error_msg = (
                         f'Trailing whitespace in {file_path}:{line_num}'
                     )
+                    raise AssertionError(error_msg)
     assert repr('test')
