@@ -9,8 +9,14 @@ from pathlib import Path
 def test_pep8_compliance():
     """Test that all Python files comply with PEP8 using flake8."""
     result = subprocess.run(
-        [sys.executable, '-m', 'flake8',
-         '--max-line-length=79', '--ignore=D100,D104,W503', '.'],
+        [
+            sys.executable,
+            '-m',
+            'flake8',
+            '--max-line-length=79',
+            '--ignore=D100,D104,W503',
+            '.'
+        ],
         capture_output=True,
         text=True
     )
@@ -23,7 +29,14 @@ def test_pep8_compliance():
 def test_isort_compliance():
     """Test that imports are properly sorted."""
     result = subprocess.run(
-        [sys.executable, '-m', 'isort', '--check-only', '--diff', '.'],
+        [
+            sys.executable,
+            '-m',
+            'isort',
+            '--check-only',
+            '--diff',
+            '.'
+        ],
         capture_output=True,
         text=True
     )
