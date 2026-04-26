@@ -1,4 +1,3 @@
-cat > the_snake.py << 'EOF'
 """Snake game implementation using curses library."""
 
 import curses
@@ -251,4 +250,3 @@ def run_game() -> None:
 
 if __name__ == '__main__':
     run_game()
-EOF
