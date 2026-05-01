@@ -1,8 +1,7 @@
 """Игра Змейка - классическая аркадная игра."""
+import pygame
 import random
 from typing import List, Optional, Tuple
-
-import pygame
 
 pygame.init()
 
@@ -122,6 +121,69 @@ class Snake(GameObject):
         self.length += 1
 
 
+class Game:
+    """Основной класс игры, управляющий игровым циклом."""
+
+    def __init__(self):
+        """Инициализирует игру."""
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption('Snake Game')
+        self.clock = pygame.time.Clock()
+        self.snake = Snake()
+        self.apple = Apple()
+        self.running = True
+
+    def handle_events(self) -> None:
+        """Обрабатывает события игры."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self.snake.next_direction = UP
+                elif event.key == pygame.K_DOWN:
+                    self.snake.next_direction = DOWN
+                elif event.key == pygame.K_LEFT:
+                    self.snake.next_direction = LEFT
+                elif event.key == pygame.K_RIGHT:
+                    self.snake.next_direction = RIGHT
+
+    def update(self) -> None:
+        """Обновляет состояние игры."""
+        self.snake.update_direction()
+        self.snake.move()
+
+        if self.snake.get_head_position() == self.apple.position:
+            self.snake.grow()
+            self.apple.randomize_position()
+            while self.apple.position in self.snake.positions:
+                self.apple.randomize_position()
+
+        if self.snake.check_self_collision():
+            self.snake.reset()
+            self.apple.randomize_position()
+
+    def draw(self) -> None:
+        """Отрисовывает все объекты игры."""
+        self.screen.fill(BLACK)
+        self.apple.draw(self.screen)
+        self.snake.draw(self.screen)
+        pygame.display.update()
+
+    def run(self) -> None:
+        """Запускает основной игровой цикл."""
+        while self.running:
+            self.handle_events()
+            self.update()
+            self.draw()
+            self.clock.tick(20)
+
+    def reset(self) -> None:
+        """Сбрасывает игру в начальное состояние."""
+        self.snake.reset()
+        self.apple.randomize_position()
+
+
 def handle_keys(snake: Snake) -> None:
     """Обрабатывает нажатия клавиш для управления змейкой."""
     for event in pygame.event.get():
@@ -140,33 +202,9 @@ def handle_keys(snake: Snake) -> None:
 
 
 def main() -> None:
-    """Основная функция игры. Запускает игровой цикл."""
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption('Snake Game')
-    clock = pygame.time.Clock()
-    snake = Snake()
-    apple = Apple()
-
-    while True:
-        handle_keys(snake)
-        snake.update_direction()
-        snake.move()
-
-        if snake.get_head_position() == apple.position:
-            snake.grow()
-            apple.randomize_position()
-            while apple.position in snake.positions:
-                apple.randomize_position()
-
-        if snake.check_self_collision():
-            snake.reset()
-            apple.randomize_position()
-
-        screen.fill(BLACK)
-        apple.draw(screen)
-        snake.draw(screen)
-        pygame.display.update()
-        clock.tick(20)
+    """Основная функция игры для обратной совместимости."""
+    game = Game()
+    game.run()
 
 
 if __name__ == '__main__':
