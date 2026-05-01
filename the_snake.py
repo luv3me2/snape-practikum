@@ -1,252 +1,306 @@
-"""Snake game implementation using curses library."""
-
-import curses
+import pygame
 import random
-import time
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+
+# Инициализация Pygame
+pygame.init()
+
+# Константы
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
+CELL_SIZE = 20
+GRID_WIDTH = SCREEN_WIDTH // CELL_SIZE  # 32
+GRID_HEIGHT = SCREEN_HEIGHT // CELL_SIZE  # 24
+
+# Цвета (RGB)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# Направления движения
+UP = (0, -1)
+DOWN = (0, 1)
+LEFT = (-1, 0)
+RIGHT = (1, 0)
 
 
-class Snake:
-    """Represents the snake in the game."""
-
-    def __init__(self, start_pos: List[Tuple[int, int]]):
-        """Initialize snake with starting position.
-
-        Args:
-            start_pos: Initial position of the snake segments.
+class GameObject:
+    """
+    Базовый класс для всех игровых объектов.
+    Содержит общие атрибуты: позицию и цвет.
+    """
+    
+    def __init__(self, position: Tuple[int, int], body_color: Tuple[int, int, int]):
         """
-        self.body = start_pos
-        self.direction = 'RIGHT'
-        self.grow_flag = False
-
-    def change_direction(self, new_direction: str) -> None:
-        """Change snake's direction if not opposite to current direction.
-
+        Инициализирует базовый игровой объект.
+        
         Args:
-            new_direction: New direction to set.
+            position: Координаты объекта на игровом поле (x, y)
+            body_color: RGB-цвет объекта
         """
-        opposite_directions = {
-            'UP': 'DOWN',
-            'DOWN': 'UP',
-            'LEFT': 'RIGHT',
-            'RIGHT': 'LEFT'
-        }
-        if new_direction != opposite_directions.get(self.direction):
-            self.direction = new_direction
+        self.position = position
+        self.body_color = body_color
+    
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Абстрактный метод для отрисовки объекта.
+        Должен быть переопределён в дочерних классах.
+        
+        Args:
+            surface: Поверхность Pygame для отрисовки
+        """
+        pass
 
+
+class Apple(GameObject):
+    """
+    Класс яблока, которое появляется в случайных местах игрового поля.
+    При съедании змейкой перемещается на новую позицию.
+    """
+    
+    def __init__(self):
+        """Инициализирует яблоко с красным цветом и случайной позицией."""
+        super().__init__((0, 0), RED)
+        self.randomize_position()
+    
+    def randomize_position(self) -> None:
+        """
+        Устанавливает случайную позицию яблока в пределах игрового поля.
+        Координаты привязаны к сетке (кратны CELL_SIZE).
+        """
+        grid_x = random.randint(0, GRID_WIDTH - 1)
+        grid_y = random.randint(0, GRID_HEIGHT - 1)
+        self.position = (grid_x * CELL_SIZE, grid_y * CELL_SIZE)
+    
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Отрисовывает яблоко на игровой поверхности.
+        
+        Args:
+            surface: Поверхность Pygame для отрисовки
+        """
+        rect = pygame.Rect(self.position[0], self.position[1], CELL_SIZE, CELL_SIZE)
+        pygame.draw.rect(surface, self.body_color, rect)
+        pygame.draw.rect(surface, BLACK, rect, 1)  # Контур для лучшей видимости
+
+
+class Snake(GameObject):
+    """
+    Класс змейки, управляемой игроком.
+    Содержит логику движения, роста, проверки столкновений и сброса состояния.
+    """
+    
+    def __init__(self):
+        """Инициализирует змейку в начальном состоянии."""
+        # Позиция головы в центре экрана
+        start_x = (GRID_WIDTH // 2) * CELL_SIZE
+        start_y = (GRID_HEIGHT // 2) * CELL_SIZE
+        super().__init__((start_x, start_y), GREEN)
+        
+        # Список позиций всех сегментов (каждый элемент - кортеж (x, y))
+        self.positions: List[Tuple[int, int]] = [self.position]
+        
+        # Длина змейки (количество сегментов)
+        self.length: int = 1
+        
+        # Текущее направление движения
+        self.direction: Tuple[int, int] = RIGHT
+        
+        # Следующее направление (для обработки нажатий клавиш)
+        self.next_direction: Optional[Tuple[int, int]] = None
+    
+    def update_direction(self) -> None:
+        """
+        Обновляет направление движения змейки.
+        Запрещает движение в противоположную сторону (нельзя развернуться на 180 градусов).
+        """
+        if self.next_direction is not None:
+            # Проверка: нельзя двигаться в противоположную сторону
+            opposite_directions = {
+                UP: DOWN,
+                DOWN: UP,
+                LEFT: RIGHT,
+                RIGHT: LEFT
+            }
+            if opposite_directions.get(self.next_direction) != self.direction:
+                self.direction = self.next_direction
+            self.next_direction = None
+    
     def move(self) -> None:
-        """Move snake one step in current direction."""
-        head = list(self.body[0])
-        if self.direction == 'RIGHT':
-            head[1] += 1
-        elif self.direction == 'LEFT':
-            head[1] -= 1
-        elif self.direction == 'UP':
-            head[0] -= 1
-        elif self.direction == 'DOWN':
-            head[0] += 1
-
-        self.body.insert(0, tuple(head))
-        if not self.grow_flag:
-            self.body.pop()
-        else:
-            self.grow_flag = False
-
+        """
+        Перемещает змейку в текущем направлении.
+        Добавляет новую голову в начало списка и удаляет хвост,
+        если длина не увеличилась при съедании яблока.
+        """
+        head_x, head_y = self.get_head_position()
+        
+        # Вычисляем новую позицию головы
+        new_head_x = head_x + self.direction[0] * CELL_SIZE
+        new_head_y = head_y + self.direction[1] * CELL_SIZE
+        
+        # А для телепортации через границы (классическая "прохождение сквозь стены")
+        # Если выходим за границы, появляемся с противоположной стороны
+        new_head_x = new_head_x % SCREEN_WIDTH
+        new_head_y = new_head_y % SCREEN_HEIGHT
+        
+        new_head = (new_head_x, new_head_y)
+        
+        # Вставляем новую голову в начало списка
+        self.positions.insert(0, new_head)
+        
+        # Если длина змейки не превышает текущую, удаляем последний сегмент
+        if len(self.positions) > self.length:
+            self.positions.pop()
+        
+        # Обновляем позицию головы в родительском классе
+        self.position = self.positions[0]
+    
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Отрисовывает змейку на игровой поверхности.
+        Голова рисуется более ярким оттенком.
+        
+        Args:
+            surface: Поверхность Pygame для отрисовки
+        """
+        for i, pos in enumerate(self.positions):
+            rect = pygame.Rect(pos[0], pos[1], CELL_SIZE, CELL_SIZE)
+            # Голова змейки рисуется более светлым цветом
+            if i == 0:
+                pygame.draw.rect(surface, (0, 200, 0), rect)
+            else:
+                pygame.draw.rect(surface, self.body_color, rect)
+            pygame.draw.rect(surface, BLACK, rect, 1)  # Контур
+    
+    def get_head_position(self) -> Tuple[int, int]:
+        """
+        Возвращает позицию головы змейки.
+        
+        Returns:
+            Кортеж (x, y) с координатами головы
+        """
+        return self.positions[0]
+    
+    def check_self_collision(self) -> bool:
+        """
+        Проверяет, столкнулась ли змейка сама с собой.
+        
+        Returns:
+            True, если голова столкнулась с телом, иначе False
+        """
+        head = self.get_head_position()
+        # Голова не должна совпадать ни с одним из сегментов тела (кроме самой себя, но она первая)
+        return head in self.positions[1:]
+    
+    def reset(self) -> None:
+        """
+        Сбрасывает змейку в начальное состояние после проигрыша.
+        """
+        start_x = (GRID_WIDTH // 2) * CELL_SIZE
+        start_y = (GRID_HEIGHT // 2) * CELL_SIZE
+        self.position = (start_x, start_y)
+        self.positions = [self.position]
+        self.length = 1
+        self.direction = RIGHT
+        self.next_direction = None
+    
     def grow(self) -> None:
-        """Set flag to grow snake on next move."""
-        self.grow_flag = True
-
-    def check_collision(self, width: int, height: int) -> bool:
-        """Check if snake collided with walls or itself.
-
-        Args:
-            width: Game area width.
-            height: Game area height.
-
-        Returns:
-            True if collision detected, False otherwise.
         """
-        head = self.body[0]
-        if (head[0] <= 0 or head[0] >= height - 1 or
-                head[1] <= 0 or head[1] >= width - 1):
-            return True
-        return head in self.body[1:]
-
-
-class Food:
-    """Represents food in the game."""
-
-    def __init__(self, width: int, height: int):
-        """Initialize food at random position.
-
-        Args:
-            width: Game area width.
-            height: Game area height.
+        Увеличивает длину змейки на один сегмент.
+        Вызывается при съедании яблока.
         """
-        self.width = width
-        self.height = height
-        self.position = (
-            random.randint(1, height - 2),
-            random.randint(1, width - 2)
-        )
-
-    def respawn(self, snake_body: List[Tuple[int, int]]) -> None:
-        """Respawn food at random position not occupied by snake.
-
-        Args:
-            snake_body: Current snake body positions.
-        """
-        while True:
-            new_pos = (
-                random.randint(1, self.height - 2),
-                random.randint(1, self.width - 2)
-            )
-            if new_pos not in snake_body:
-                self.position = new_pos
-                break
+        self.length += 1
 
 
-class Game:
-    """Main game controller class."""
-
-    def __init__(self, width: int = 60, height: int = 20):
-        """Initialize game with specified dimensions.
-
-        Args:
-            width: Game area width.
-            height: Game area height.
-        """
-        self.width = width
-        self.height = height
-        self.score = 0
-        self.game_over = False
-
-        start_pos = [
-            (self.height // 2, self.width // 2 - i)
-            for i in range(3)
-        ]
-        self.snake = Snake(start_pos)
-        self.food = Food(self.width, self.height)
-
-    def check_food_collision(self) -> None:
-        """Check if snake ate food and update score."""
-        if self.snake.body[0] == self.food.position:
-            self.score += 1
-            self.snake.grow()
-            self.food.respawn(self.snake.body)
-
-    def update(self) -> bool:
-        """Update game state.
-
-        Returns:
-            False if game should end, True otherwise.
-        """
-        self.snake.move()
-        if self.snake.check_collision(self.width, self.height):
-            self.game_over = True
-            return False
-        self.check_food_collision()
-        return True
-
-
-def draw(screen, game: Game) -> None:
-    """Draw current game state on screen.
-
-    Args:
-        screen: Curses screen object.
-        game: Game instance to draw.
+def handle_keys(snake: Snake) -> None:
     """
-    screen.clear()
-
-    for i in range(game.width):
-        screen.addch(0, i, '#')
-        screen.addch(game.height - 1, i, '#')
-    for i in range(game.height):
-        screen.addch(i, 0, '#')
-        screen.addch(i, game.width - 1, '#')
-
-    food_y, food_x = game.food.position
-    screen.addch(food_y, food_x, '@')
-
-    for i, segment in enumerate(game.snake.body):
-        segment_y, segment_x = segment
-        if i == 0:
-            screen.addch(segment_y, segment_x, 'O')
-        else:
-            screen.addch(segment_y, segment_x, 'o')
-
-    score_text = f'Score: {game.score}'
-    screen.addstr(0, game.width + 2, score_text)
-
-    screen.refresh()
-
-
-def handle_input(key: int, snake: Snake) -> bool:
-    """Handle keyboard input.
-
+    Обрабатывает нажатия клавиш и устанавливает следующее направление движения змейки.
+    
     Args:
-        key: Pressed key code.
-        snake: Snake object to control.
-
-    Returns:
-        False if game should quit, True otherwise.
+        snake: Объект змейки, у которого будет изменено направление
     """
-    if key == ord('q'):
-        return False
-    if key == curses.KEY_UP:
-        snake.change_direction('UP')
-    elif key == curses.KEY_DOWN:
-        snake.change_direction('DOWN')
-    elif key == curses.KEY_LEFT:
-        snake.change_direction('LEFT')
-    elif key == curses.KEY_RIGHT:
-        snake.change_direction('RIGHT')
-    return True
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                snake.next_direction = UP
+            elif event.key == pygame.K_DOWN:
+                snake.next_direction = DOWN
+            elif event.key == pygame.K_LEFT:
+                snake.next_direction = LEFT
+            elif event.key == pygame.K_RIGHT:
+                snake.next_direction = RIGHT
 
 
-def show_game_over(screen, game: Game) -> None:
-    """Display game over message.
-
-    Args:
-        screen: Curses screen object.
-        game: Game instance with final score.
+def main() -> None:
     """
-    game_over_msg = f'Game Over! Final Score: {game.score}'
-    msg_x = (game.width - len(game_over_msg)) // 2
-    screen.addstr(game.height // 2, msg_x, game_over_msg)
-    screen.refresh()
-    time.sleep(2)
-
-
-def main(stdscr) -> None:
-    """Main game loop.
-
-    Args:
-        stdscr: Curses standard screen object.
+    Основная функция игры.
+    Инициализирует окно Pygame, создаёт игровые объекты и запускает игровой цикл.
     """
-    curses.curs_set(0)
-    stdscr.nodelay(1)
-    stdscr.timeout(100)
+    # Настройка окна
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Изгиб Питона - Классическая Змейка")
+    
+    # Часы для контроля FPS
+    clock = pygame.time.Clock()
+    
+    # Создание игровых объектов
+    snake = Snake()
+    apple = Apple()
+    
+    # Дополнительная переменная для отслеживания состояния игры
+    running = True
+    
+    # Основной игровой цикл
+    while running:
+        # Обработка событий клавиатуры и закрытия окна
+        handle_keys(snake)
+        
+        # Обновление направления движения змейки
+        snake.update_direction()
+        
+        # Перемещение змейки
+        snake.move()
+        
+        # Проверка: съела ли змейка яблоко?
+        if snake.get_head_position() == apple.position:
+            snake.grow()           # Увеличиваем длину змейки
+            apple.randomize_position()  # Перемещаем яблоко
+            
+            # Дополнительная проверка: если яблоко появилось на теле змейки,
+            # генерируем новую позицию (простая защита)
+            while apple.position in snake.positions:
+                apple.randomize_position()
+        
+        # Проверка столкновения с самим собой
+        if snake.check_self_collision():
+            snake.reset()          # Сбрасываем змейку
+            # Яблоко при сбросе можно оставить на месте или тоже сбросить
+            # Для лучшего опыта - сбросим и яблоко
+            apple.randomize_position()
+        
+        # Отрисовка: заливаем фон чёрным цветом
+        screen.fill(BLACK)
+        
+        # Отрисовка яблока
+        apple.draw(screen)
+        
+        # Отрисовка змейки
+        snake.draw(screen)
+        
+        # Обновление экрана
+        pygame.display.update()
+        
+        # Задержка для контроля скорости игры (20 кадров в секунду)
+        clock.tick(20)
+    
+    # Завершение работы Pygame (код сюда не дойдёт из-за exit() в handle_keys,
+    # но на всякий случай)
+    pygame.quit()
 
-    game = Game()
 
-    while not game.game_over:
-        draw(stdscr, game)
-
-        key = stdscr.getch()
-        if not handle_input(key, game.snake):
-            break
-
-        if not game.update():
-            break
-
-    show_game_over(stdscr, game)
-
-
-def run_game() -> None:
-    """Run the snake game."""
-    curses.wrapper(main)
-
-
-if __name__ == '__main__':
-    run_game()
+if __name__ == "__main__":
+    main()
