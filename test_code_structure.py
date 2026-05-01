@@ -2,9 +2,10 @@
 Тесты для проверки финального проекта «Изгиб Питона».
 Проверяет наличие классов, методов и базовую логику игры.
 """
-import unittest
-import sys
+import importlib
 import os
+import sys
+import unittest
 from unittest.mock import Mock, patch
 
 # Добавляем текущую директорию в путь для импорта
@@ -204,14 +205,14 @@ class TestGameLogic(unittest.TestCase):
     @patch('pygame.display.set_mode')
     @patch('pygame.display.set_caption')
     @patch('pygame.time.Clock')
-    def test_main_initialization(self, mock_clock, mock_set_caption, mock_set_mode):
+    def test_main_initialization(self, mock_clock, mock_set_caption,
+                                 mock_set_mode):
         """Проверяет инициализацию игры."""
         # Создаём моки
         mock_screen = Mock()
         mock_set_mode.return_value = mock_screen
 
         # Импортируем модуль заново для изоляции
-        import importlib
         if 'the_snake' in sys.modules:
             importlib.reload(snake_game)
 
@@ -265,10 +266,8 @@ class TestGameLogic(unittest.TestCase):
             snake = snake_game.Snake()
 
             # Помещаем голову на правую границу
-            snake.positions[0] = (
-                snake_game.SCREEN_WIDTH - snake_game.CELL_SIZE,
-                snake_game.SCREEN_HEIGHT // 2
-            )
+            edge_x = snake_game.SCREEN_WIDTH - snake_game.CELL_SIZE
+            snake.positions[0] = (edge_x, snake_game.SCREEN_HEIGHT // 2)
             snake.direction = snake_game.RIGHT
             snake.move()
 
@@ -338,12 +337,14 @@ def run_tests():
     result = runner.run(suite)
 
     # Выводим итоговую информацию
-    print("\n" + "=" * 60)
-    print(f"Всего тестов: {result.testsRun}")
-    print(f"Успешно: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"Провалено: {len(result.failures)}")
-    print(f"Ошибок: {len(result.errors)}")
-    print("=" * 60)
+    print('\n' + '=' * 60)
+    total = result.testsRun
+    successful = total - len(result.failures) - len(result.errors)
+    print(f'Всего тестов: {total}')
+    print(f'Успешно: {successful}')
+    print(f'Провалено: {len(result.failures)}')
+    print(f'Ошибок: {len(result.errors)}')
+    print('=' * 60)
 
     return result.wasSuccessful()
 
