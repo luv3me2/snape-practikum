@@ -319,12 +319,10 @@ class TestPEP8Compliance(unittest.TestCase):
 
 
 def run_tests():
-    """Запускает все тесты и выводит результат."""
-    # Создаём тестовый набор
+    """Запускает все тесты и возвращает результат."""
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
 
-    # Добавляем все тесты
     suite.addTests(loader.loadTestsFromTestCase(TestGameObject))
     suite.addTests(loader.loadTestsFromTestCase(TestApple))
     suite.addTests(loader.loadTestsFromTestCase(TestSnake))
@@ -332,19 +330,8 @@ def run_tests():
     suite.addTests(loader.loadTestsFromTestCase(TestGameLogic))
     suite.addTests(loader.loadTestsFromTestCase(TestPEP8Compliance))
 
-    # Запускаем тесты
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-
-    # Выводим итоговую информацию
-    print('\n' + '=' * 60)
-    total = result.testsRun
-    successful = total - len(result.failures) - len(result.errors)
-    print(f'Всего тестов: {total}')
-    print(f'Успешно: {successful}')
-    print(f'Провалено: {len(result.failures)}')
-    print(f'Ошибок: {len(result.errors)}')
-    print('=' * 60)
 
     return result.wasSuccessful()
 
