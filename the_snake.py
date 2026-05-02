@@ -1,5 +1,5 @@
 from random import choice, randint
-from typing import Optional, Tuple, Any  # <-- Добавлен импорт для типов
+from typing import Tuple, List, Optional
 
 import pygame as pg
 
@@ -48,20 +48,20 @@ class GameObject:
 
     def __init__(
             self,
-            bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,  # <- Тип аргумента
-            border_color: Tuple[int, int, int] = BORDER_COLOR  # <- Тип аргумента
+            bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
+            border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
-        self.position = SCREEN_CENTER_COORDINATES
-        self.body_color = bodycolor
-        self.border_color = border_color
+        self.position: Tuple[int, int] = SCREEN_CENTER_COORDINATES
+        self.body_color: Tuple[int, int, int] = bodycolor
+        self.border_color: Tuple[int, int, int] = border_color
 
-    def draw_cell(self, position: Tuple[int, int]) -> None:  # <- Тип аргумента и возврата
+    def draw_cell(self, position: Tuple[int, int]) -> None:
         """Отрисовывает ячейку на игровой поверхности"""
-        rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
+        rect: pg.Rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, rect)
         pg.draw.rect(screen, self.border_color, rect, 1)
 
-    def draw(self) -> None:  # <- Тип возврата
+    def draw(self) -> None:
         """
         Абстрактный метод, который предназначен
         для переопределения в дочерних классах.
@@ -76,14 +76,14 @@ class Apple(GameObject):
 
     def __init__(
             self,
-            bodycolor: Tuple[int, int, int] = APPLE_COLOR,  # <- Тип аргумента
-            border_color: Tuple[int, int, int] = BORDER_COLOR,  # <- Тип аргумента
-            busy_positions: Tuple[Tuple[int, int], ...] = (SCREEN_CENTER_COORDINATES,)  # <- Тип аргумента
+            bodycolor: Tuple[int, int, int] = APPLE_COLOR,
+            border_color: Tuple[int, int, int] = BORDER_COLOR,
+            busy_positions: Tuple[Tuple[int, int], ...] = (SCREEN_CENTER_COORDINATES,)
     ) -> None:
         super().__init__(bodycolor, border_color)
         self.randomize_position(busy_positions)
 
-    def randomize_position(self, busy_positions: Tuple[Tuple[int, int], ...]) -> None:  # <- Тип аргумента и возврата
+    def randomize_position(self, busy_positions: Tuple[Tuple[int, int], ...]) -> None:
         """Случайно изменяет положение яблока на игровом поле"""
         while True:
             self.position = (
@@ -93,7 +93,7 @@ class Apple(GameObject):
             if self.position not in busy_positions:
                 break
 
-    def draw(self) -> None:  # <- Тип возврата
+    def draw(self) -> None:
         """Отрисовывает яблоко на игровой поверхности"""
         self.draw_cell(self.position)
 
@@ -103,41 +103,39 @@ class Snake(GameObject):
 
     def __init__(
             self,
-            bodycolor: Tuple[int, int, int] = SNAKE_COLOR,  # <- Тип аргумента
-            border_color: Tuple[int, int, int] = BORDER_COLOR  # <- Тип аргумента
+            bodycolor: Tuple[int, int, int] = SNAKE_COLOR,
+            border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         super().__init__(bodycolor, border_color)
-        self.length = 1
-        self.positions = [self.position]
-        self.direction = RIGHT
-        self.next_direction = None
+        self.reset()               # устраняем дублирование кода инициализации
+        self.direction = RIGHT     # переопределяем, так как reset() выбирает случайное направление
 
-    def update_direction(self) -> None:  # <- Тип возврата
+    def update_direction(self) -> None:
         """Обновляет направление движения змейки."""
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self) -> None:  # <- Тип возврата
+    def move(self) -> None:
         """Обновляет позицию змейки с учётом границ"""
         head_x, head_y = self.get_head_position()
         dir_x, dir_y = self.direction
-        new_head_x = (head_x + dir_x * GRID_SIZE) % SCREEN_WIDTH
-        new_head_y = (head_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
+        new_head_x: int = (head_x + dir_x * GRID_SIZE) % SCREEN_WIDTH
+        new_head_y: int = (head_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
         self.positions.insert(0, (new_head_x, new_head_y))
         if self.length != len(self.positions):
             self.positions.pop()
 
-    def draw(self) -> None:  # <- Тип возврата
+    def draw(self) -> None:
         """Отрисовывает змейку на игровой поверхности"""
         for position in self.positions:
             self.draw_cell(position)
 
-    def get_head_position(self) -> Tuple[int, int]:  # <- Тип возврата (уже было правильно)
+    def get_head_position(self) -> Tuple[int, int]:
         """Возвращает кортеж с координатами головы змейки."""
         return self.positions[0]
 
-    def reset(self) -> None:  # <- Тип возврата
+    def reset(self) -> None:
         """Сбрасывает змейку в начальное состояние."""
         self.length = 1
         self.positions = [self.position]
@@ -145,7 +143,7 @@ class Snake(GameObject):
         self.next_direction = None
 
 
-def handle_keys(game_object: Snake) -> None:  # <- Тип аргумента и возврата
+def handle_keys(game_object: Snake) -> None:
     """Обрабатывает движения клавиш, чтобы изменить направление змейки."""
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -162,15 +160,15 @@ def handle_keys(game_object: Snake) -> None:  # <- Тип аргумента и 
                 game_object.next_direction = RIGHT
 
 
-def main() -> None:  # <- Тип возврата
+def main() -> None:
     """Основная функция игры: инициализация и главный цикл."""
     pg.init()
-    snake = Snake()
-    apple = Apple(busy_positions=snake.positions)
+    snake: Snake = Snake()
+    apple: Apple = Apple(busy_positions=snake.positions)
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        ate_apple = (snake.get_head_position() == apple.position)
+        ate_apple: bool = (snake.get_head_position() == apple.position)
         snake.move()
         snake.update_direction()
         if ate_apple:
