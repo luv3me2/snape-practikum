@@ -85,7 +85,9 @@ class Apple(GameObject):
         super().__init__(bodycolor, border_color)
         self.randomize_position(busy_positions)
 
-    def randomize_position(self, busy_positions: List[Tuple[int, int]]) -> None:
+    def randomize_position(
+        self, busy_positions: List[Tuple[int, int]]
+    ) -> None:
         """Случайно изменяет положение яблока на игровом поле"""
         while True:
             self.position = (
@@ -140,7 +142,9 @@ class Snake(GameObject):
         """Сбрасывает змейку в начальное состояние."""
         self.length: int = 1
         self.positions: List[Tuple[int, int]] = [self.position]
-        self.direction: Tuple[int, int] = random.choice([RIGHT, LEFT, DOWN, UP])
+        self.direction: Tuple[int, int] = random.choice(
+            [RIGHT, LEFT, DOWN, UP]
+        )
         self.next_direction: Optional[Tuple[int, int]] = None
 
 
