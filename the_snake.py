@@ -1,5 +1,5 @@
 from random import choice, randint
-from typing import Tuple, List, Optional
+from typing import Tuple
 
 import pygame as pg
 
@@ -55,12 +55,6 @@ class GameObject:
         self.body_color = bodycolor
         self.border_color = border_color
 
-    def draw_cell(self, position: Tuple[int, int]) -> None:
-        """Отрисовывает ячейку на игровой поверхности"""
-        rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
-        pg.draw.rect(screen, self.body_color, rect)
-        pg.draw.rect(screen, self.border_color, rect, 1)
-
     def draw(self) -> None:
         """
         Абстрактный метод, который предназначен
@@ -95,7 +89,9 @@ class Apple(GameObject):
 
     def draw(self) -> None:
         """Отрисовывает яблоко на игровой поверхности"""
-        self.draw_cell(self.position)
+        rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pg.draw.rect(screen, self.body_color, rect)
+        pg.draw.rect(screen, self.border_color, rect, 1)
 
 
 class Snake(GameObject):
@@ -107,8 +103,10 @@ class Snake(GameObject):
             border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         super().__init__(bodycolor, border_color)
-        self.reset()
+        self.length = 1
+        self.positions = [self.position]
         self.direction = RIGHT
+        self.next_direction = None
 
     def update_direction(self) -> None:
         """Обновляет направление движения змейки."""
@@ -129,7 +127,9 @@ class Snake(GameObject):
     def draw(self) -> None:
         """Отрисовывает змейку на игровой поверхности"""
         for position in self.positions:
-            self.draw_cell(position)
+            rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
+            pg.draw.rect(screen, self.body_color, rect)
+            pg.draw.rect(screen, self.border_color, rect, 1)
 
     def get_head_position(self) -> Tuple[int, int]:
         """Возвращает кортеж с координатами головы змейки."""
@@ -163,8 +163,8 @@ def handle_keys(game_object: Snake) -> None:
 def main() -> None:
     """Основная функция игры: инициализация и главный цикл."""
     pg.init()
+    apple = Apple()
     snake = Snake()
-    apple = Apple(busy_positions=snake.positions)
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
