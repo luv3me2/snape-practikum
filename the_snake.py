@@ -1,5 +1,5 @@
-from random import choice, randint
-from typing import List, Tuple, Optional
+import random
+from typing import List, Optional, Tuple
 
 import pygame as pg
 
@@ -47,9 +47,9 @@ class GameObject:
     """Класс описывающий игровые объекты."""
 
     def __init__(
-            self,
-            bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
-            border_color: Tuple[int, int, int] = BORDER_COLOR
+        self,
+        bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
+        border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         self.position: Tuple[int, int] = SCREEN_CENTER_COORDINATES
         self.body_color: Tuple[int, int, int] = bodycolor
@@ -75,10 +75,12 @@ class Apple(GameObject):
     """Унаследованный класс, описывающий яблоко и действия с ним."""
 
     def __init__(
-            self,
-            bodycolor: Tuple[int, int, int] = APPLE_COLOR,
-            border_color: Tuple[int, int, int] = BORDER_COLOR,
-            busy_positions: Tuple[Tuple[int, int], ...] = (SCREEN_CENTER_COORDINATES,)
+        self,
+        bodycolor: Tuple[int, int, int] = APPLE_COLOR,
+        border_color: Tuple[int, int, int] = BORDER_COLOR,
+        busy_positions: Tuple[Tuple[int, int], ...] = (
+            SCREEN_CENTER_COORDINATES,
+        )
     ) -> None:
         super().__init__(bodycolor, border_color)
         self.randomize_position(busy_positions)
@@ -87,8 +89,8 @@ class Apple(GameObject):
         """Случайно изменяет положение яблока на игровом поле"""
         while True:
             self.position = (
-                randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-                randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+                random.randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+                random.randint(0, GRID_HEIGHT - 1) * GRID_SIZE
             )
             if self.position not in busy_positions:
                 break
@@ -102,9 +104,9 @@ class Snake(GameObject):
     """Унаследованный класс, описывающий змейку и её поведение."""
 
     def __init__(
-            self,
-            bodycolor: Tuple[int, int, int] = SNAKE_COLOR,
-            border_color: Tuple[int, int, int] = BORDER_COLOR
+        self,
+        bodycolor: Tuple[int, int, int] = SNAKE_COLOR,
+        border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         super().__init__(bodycolor, border_color)
         self.reset()
@@ -138,7 +140,7 @@ class Snake(GameObject):
         """Сбрасывает змейку в начальное состояние."""
         self.length: int = 1
         self.positions: List[Tuple[int, int]] = [self.position]
-        self.direction: Tuple[int, int] = choice([RIGHT, LEFT, DOWN, UP])
+        self.direction: Tuple[int, int] = random.choice([RIGHT, LEFT, DOWN, UP])
         self.next_direction: Optional[Tuple[int, int]] = None
 
 
@@ -164,7 +166,7 @@ def main() -> None:
     pg.init()
     snake = Snake()
     apple = Apple(busy_positions=snake.positions)
-    
+
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
