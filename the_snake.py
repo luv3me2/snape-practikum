@@ -1,5 +1,5 @@
 from random import choice, randint
-from typing import Tuple
+from typing import Tuple, Optional
 
 import pygame as pg
 
@@ -51,9 +51,9 @@ class GameObject:
             bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
             border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
-        self.position = SCREEN_CENTER_COORDINATES
-        self.body_color = bodycolor
-        self.border_color = border_color
+        self.position: Tuple[int, int] = SCREEN_CENTER_COORDINATES
+        self.body_color: Tuple[int, int, int] = bodycolor
+        self.border_color: Tuple[int, int, int] = border_color
 
     def draw(self) -> None:
         """
@@ -103,10 +103,10 @@ class Snake(GameObject):
             border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         super().__init__(bodycolor, border_color)
-        self.length = 1
-        self.positions = [self.position]
-        self.direction = RIGHT
-        self.next_direction = None
+        self.length: int = 1
+        self.positions: list[Tuple[int, int]] = [self.position]
+        self.direction: Tuple[int, int] = RIGHT
+        self.next_direction: Optional[Tuple[int, int]] = None
 
     def update_direction(self) -> None:
         """Обновляет направление движения змейки."""
