@@ -51,13 +51,13 @@ class GameObject:
             bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
             border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
-        self.position: Tuple[int, int] = SCREEN_CENTER_COORDINATES
-        self.body_color: Tuple[int, int, int] = bodycolor
-        self.border_color: Tuple[int, int, int] = border_color
+        self.position = SCREEN_CENTER_COORDINATES
+        self.body_color = bodycolor
+        self.border_color = border_color
 
     def draw_cell(self, position: Tuple[int, int]) -> None:
         """Отрисовывает ячейку на игровой поверхности"""
-        rect: pg.Rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
+        rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, rect)
         pg.draw.rect(screen, self.border_color, rect, 1)
 
@@ -107,8 +107,8 @@ class Snake(GameObject):
             border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         super().__init__(bodycolor, border_color)
-        self.reset()               # устраняем дублирование кода инициализации
-        self.direction = RIGHT     # переопределяем, так как reset() выбирает случайное направление
+        self.reset()
+        self.direction = RIGHT
 
     def update_direction(self) -> None:
         """Обновляет направление движения змейки."""
@@ -120,8 +120,8 @@ class Snake(GameObject):
         """Обновляет позицию змейки с учётом границ"""
         head_x, head_y = self.get_head_position()
         dir_x, dir_y = self.direction
-        new_head_x: int = (head_x + dir_x * GRID_SIZE) % SCREEN_WIDTH
-        new_head_y: int = (head_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
+        new_head_x = (head_x + dir_x * GRID_SIZE) % SCREEN_WIDTH
+        new_head_y = (head_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
         self.positions.insert(0, (new_head_x, new_head_y))
         if self.length != len(self.positions):
             self.positions.pop()
@@ -163,12 +163,12 @@ def handle_keys(game_object: Snake) -> None:
 def main() -> None:
     """Основная функция игры: инициализация и главный цикл."""
     pg.init()
-    snake: Snake = Snake()
-    apple: Apple = Apple(busy_positions=snake.positions)
+    snake = Snake()
+    apple = Apple(busy_positions=snake.positions)
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        ate_apple: bool = (snake.get_head_position() == apple.position)
+        ate_apple = (snake.get_head_position() == apple.position)
         snake.move()
         snake.update_direction()
         if ate_apple:
