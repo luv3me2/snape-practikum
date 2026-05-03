@@ -48,11 +48,11 @@ class GameObject:
 
     def __init__(
         self,
-        bodycolor: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
+        body_color: Tuple[int, int, int] = BOARD_BACKGROUND_COLOR,
         border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
         self.position: Tuple[int, int] = SCREEN_CENTER_COORDINATES
-        self.body_color: Tuple[int, int, int] = bodycolor
+        self.body_color: Tuple[int, int, int] = body_color
         self.border_color: Tuple[int, int, int] = border_color
 
     def draw_cell(self, position: Tuple[int, int]) -> None:
@@ -76,13 +76,13 @@ class Apple(GameObject):
 
     def __init__(
         self,
-        bodycolor: Tuple[int, int, int] = APPLE_COLOR,
+        body_color: Tuple[int, int, int] = APPLE_COLOR,
         border_color: Tuple[int, int, int] = BORDER_COLOR,
         busy_positions: Tuple[Tuple[int, int], ...] = (
             SCREEN_CENTER_COORDINATES,
         )
     ) -> None:
-        super().__init__(bodycolor, border_color)
+        super().__init__(body_color, border_color)
         self.randomize_position(busy_positions)
 
     def randomize_position(
@@ -107,10 +107,10 @@ class Snake(GameObject):
 
     def __init__(
         self,
-        bodycolor: Tuple[int, int, int] = SNAKE_COLOR,
+        body_color: Tuple[int, int, int] = SNAKE_COLOR,
         border_color: Tuple[int, int, int] = BORDER_COLOR
     ) -> None:
-        super().__init__(bodycolor, border_color)
+        super().__init__(body_color, border_color)
         self.reset()
 
     def update_direction(self) -> None:
